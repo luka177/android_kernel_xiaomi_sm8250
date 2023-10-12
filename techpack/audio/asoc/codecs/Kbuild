@@ -75,21 +75,6 @@ ifeq ($(KERNEL_BUILD), 0)
 		export
 		INCS    +=  -include $(AUDIO_ROOT)/config/sdm660autoconf.h
 	endif
-	ifeq ($(CONFIG_ARCH_SDM450), y)
-		include $(AUDIO_ROOT)/config/sdm450auto.conf
-		export
-		INCS    +=  -include $(AUDIO_ROOT)/config/sdm450autoconf.h
-	endif
-	ifeq ($(CONFIG_ARCH_SDM439), y)
-		include $(AUDIO_ROOT)/config/sdm450auto.conf
-		export
-		INCS    +=  -include $(AUDIO_ROOT)/config/sdm450autoconf.h
-	endif
-	ifeq ($(CONFIG_ARCH_MSM8917), y)
-		include $(AUDIO_ROOT)/config/sdm450auto.conf
-		export
-		INCS    +=  -include $(AUDIO_ROOT)/config/sdm450autoconf.h
-	endif
 endif
 
 # As per target team, build is done as follows:
@@ -167,9 +152,7 @@ ifdef CONFIG_SND_SOC_WSA881X_ANALOG
 	WSA881X_ANALOG_OBJS += wsa881x-analog.o
 	WSA881X_ANALOG_OBJS += wsa881x-tables-analog.o
 	WSA881X_ANALOG_OBJS += wsa881x-regmap-analog.o
-ifdef CONFIG_SND_SOC_BENGAL
 	WSA881X_ANALOG_OBJS += wsa881x-temp-sensor.o
-endif
 endif
 ifdef CONFIG_SND_SOC_MSM_STUB
 	STUB_OBJS += msm_stub.o
@@ -248,16 +231,17 @@ ifeq ($(KERNEL_BUILD), 1)
 	obj-y	+= wcd937x/
 	obj-y	+= wcd938x/
 	obj-y	+= bolero/
-ifeq (y, $(filter y, \
-	$(CONFIG_MACH_XIAOMI_DAGU) \
-	$(CONFIG_MACH_XIAOMI_ELISH) \
-	$(CONFIG_MACH_XIAOMI_ENUMA)))
-	obj-y	+= cs35l41_k81/
-else ifeq ($(CONFIG_MACH_XIAOMI_MUNCH), y)
-	obj-y	+= tfa9874/
-else
+ifdef CONFIG_SND_SOC_CS35L41
 	obj-y	+= cs35l41/
+else ifdef CONFIG_SND_SOC_CS35L41_K81
+	obj-y	+= cs35l41_k81/
+endif
+ifdef CONFIG_SND_SOC_TFA9874
+ifdef CONFIG_MACH_XIAOMI_LMI
 	obj-y	+= tfa98xx/
+else
+	obj-y	+= tfa9874/
+endif
 endif
 	obj-y	+= aw882xx/
 	obj-y	+= rouleur/

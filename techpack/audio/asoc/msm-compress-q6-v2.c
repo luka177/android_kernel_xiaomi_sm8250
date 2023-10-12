@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 
@@ -441,8 +440,9 @@ static int msm_compr_set_volume(struct snd_compr_stream *cstream,
 		gain_list[0] = volume_l;
 		gain_list[1] = volume_r;
 		gain_list[2] = volume_l;
-		num_channels = 3;
 		use_default = true;
+		if (use_default)
+			num_channels = 3;
 		rc = q6asm_set_multich_gain(prtd->audio_client, num_channels,
 					gain_list, chmap, use_default);
 	}
@@ -2908,18 +2908,18 @@ static int msm_compr_pointer(struct snd_compr_stream *cstream,
 	spin_lock_irqsave(&prtd->lock, flags);
 	tstamp.sampling_rate = prtd->sample_rate;
 	tstamp.byte_offset = prtd->byte_offset;
-	if (cstream->direction == SND_COMPRESS_PLAYBACK) {
-		runtime->total_bytes_transferred = prtd->copied_total;
+	if (cstream->direction == SND_COMPRESS_PLAYBACK)
 		tstamp.copied_total = prtd->copied_total;
-	}
-	else if (cstream->direction == SND_COMPRESS_CAPTURE) {
-		runtime->total_bytes_available = prtd->received_total;
+	else if (cstream->direction == SND_COMPRESS_CAPTURE)
 		tstamp.copied_total = prtd->received_total;
-	}
 	first_buffer = prtd->first_buffer;
 	if (atomic_read(&prtd->error)) {
 		pr_err_ratelimited("%s Got RESET EVENTS notification, return error\n",
 				   __func__);
+		if (cstream->direction == SND_COMPRESS_PLAYBACK)
+			runtime->total_bytes_transferred = tstamp.copied_total;
+		else
+			runtime->total_bytes_available = tstamp.copied_total;
 		tstamp.pcm_io_frames = 0;
 		memcpy(arg, &tstamp, sizeof(struct snd_compr_tstamp));
 		spin_unlock_irqrestore(&prtd->lock, flags);
@@ -3845,7 +3845,6 @@ static int msm_compr_playback_app_type_cfg_put(struct snd_kcontrol *kcontrol,
 	cfg_data.acdb_dev_id = ucontrol->value.integer.value[1];
 	if (ucontrol->value.integer.value[2] != 0)
 		cfg_data.sample_rate = ucontrol->value.integer.value[2];
-	cfg_data.channel = ucontrol->value.integer.value[4];
 	pr_debug("%s: fe_id- %llu session_type- %d be_id- %d app_type- %d acdb_dev_id- %d sample_rate- %d\n",
 		__func__, fe_id, session_type, be_id,
 		cfg_data.app_type, cfg_data.acdb_dev_id, cfg_data.sample_rate);
@@ -3879,7 +3878,6 @@ static int msm_compr_playback_app_type_cfg_get(struct snd_kcontrol *kcontrol,
 	ucontrol->value.integer.value[1] = cfg_data.acdb_dev_id;
 	ucontrol->value.integer.value[2] = cfg_data.sample_rate;
 	ucontrol->value.integer.value[3] = be_id;
-	ucontrol->value.integer.value[4] = cfg_data.channel;
 	pr_debug("%s: fedai_id %llu, session_type %d, be_id %d, app_type %d, acdb_dev_id %d, sample_rate %d\n",
 		__func__, fe_id, session_type, be_id,
 		cfg_data.app_type, cfg_data.acdb_dev_id, cfg_data.sample_rate);

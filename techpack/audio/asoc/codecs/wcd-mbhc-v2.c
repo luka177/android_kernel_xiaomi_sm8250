@@ -27,8 +27,7 @@
 #include "bolero/bolero-cdc.h"
 #include <asoc/wcd-mbhc-v2-api.h>
 
-#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU)
-#include <linux/debugfs.h>
+#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU) || defined(CONFIG_MACH_XIAOMI_PIPA)
 
 #define HEADSET_STATUS_RECORD_INDEX_PLUGIN_HEADSET (3)
 #define HEADSET_STATUS_RECORD_INDEX_PLUGIN_HEADPHONE (1)
@@ -51,11 +50,7 @@
 #define HEADSET_EVENT_PLUGOUT_MICROPHONE (4)
 #define HEADSET_EVENT_PLUGOUT_JACK (8)
 
-#define DEBUGFS_DIR_NAME "mbhc"
-#define DEBUGFS_HEADSET_STATUS_FILE_NAME "headset_status"
 #define HEADSET_EVENT_MAX (5)
-
-static struct dentry* mbhc_debugfs_dir;
 
 static ssize_t headset_status_read(struct file *filp, char __user *buffer,
 		size_t count, loff_t *ppos);
@@ -82,13 +77,13 @@ void wcd_mbhc_jack_report(struct wcd_mbhc *mbhc,
 			  struct snd_soc_jack *jack, int status, int mask)
 {
 	snd_soc_jack_report(jack, status, mask);
-#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU)
+#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU) || defined(CONFIG_MACH_XIAOMI_PIPA)
 	add_headset_event(mbhc->hph_status, mask, jack->status);
 #endif
 }
 EXPORT_SYMBOL(wcd_mbhc_jack_report);
 
-#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU)
+#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU) || defined(CONFIG_MACH_XIAOMI_PIPA)
 static void add_headset_event(int status, int mask, int jackstatus) {
 	if (status == HEADSET_STATUS_RECORD_INDEX_PLUGOUT) {
 		headset_status[4] = maxF(headset_status[4], HEADSET_EVENT_PLUGOUT_HEADPHONE);
@@ -1784,9 +1779,7 @@ static int wcd_mbhc_usbc_ana_event_handler(struct notifier_block *nb,
 		/* insertion detected, enable L_DET_EN */
 		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_L_DET_EN, 0);
 		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_L_DET_EN, 1);
-
 		WCD_MBHC_REG_READ(WCD_MBHC_L_DET_EN, det_status);
-		pr_debug("%s: det_status = %x\n", __func__, det_status);
 	} else if (mode == POWER_SUPPLY_TYPEC_NONE && mbhc->current_plug == MBHC_PLUG_TYPE_NONE) {
 		mbhc->hs_detect_work_stop = true;
 		/* Disable HW FSM */
@@ -1800,7 +1793,6 @@ static int wcd_mbhc_usbc_ana_event_handler(struct notifier_block *nb,
 		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_MECH_DETECTION_TYPE, 1);
 
 		WCD_MBHC_REG_READ(WCD_MBHC_L_DET_EN, det_status);
-		pr_debug("%s: det_status = %x\n", __func__, det_status);
 	}
 	return 0;
 }
@@ -1955,14 +1947,6 @@ int wcd_mbhc_init(struct wcd_mbhc *mbhc, struct snd_soc_component *component,
 	const char *hph_thre = "qcom,msm-mbhc-hs-mic-min-threshold-mv";
 
 	pr_debug("%s: enter\n", __func__);
-
-#if defined(CONFIG_MACH_XIAOMI_PSYCHE) || defined(CONFIG_MACH_XIAOMI_MUNCH) || defined(CONFIG_MACH_XIAOMI_DAGU)
-	mbhc_debugfs_dir = debugfs_create_dir(DEBUGFS_DIR_NAME, NULL);
-	if (!IS_ERR(mbhc_debugfs_dir)) {
-		debugfs_create_file(DEBUGFS_HEADSET_STATUS_FILE_NAME, 0666,
-				mbhc_debugfs_dir, NULL, &mbhc_headset_status_fops);
-	}
-#endif
 
 	ret = of_property_read_u32(card->dev->of_node, hph_switch, &hph_swh);
 	if (ret) {

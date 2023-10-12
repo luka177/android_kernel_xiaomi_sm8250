@@ -86,21 +86,16 @@ INCS +=		$(COMMON_INC) \
 
 EXTRA_CFLAGS += $(INCS)
 
-ifeq (y, $(filter y,\
-	$(CONFIG_MACH_XIAOMI_ALIOTH) \
-	$(CONFIG_MACH_XIAOMI_APOLLO) \
-	$(CONFIG_MACH_XIAOMI_CAS) \
-	$(CONFIG_MACH_XIAOMI_CMI) \
-	$(CONFIG_MACH_XIAOMI_DAGU) \
-	$(CONFIG_MACH_XIAOMI_ENUMA) \
-	$(CONFIG_MACH_XIAOMI_THYME) \
-	$(CONFIG_MACH_XIAOMI_UMI)))
+ifneq ($(CONFIG_MACH_XIAOMI_LMI), y)
     CDEFINES += -DCONFIG_AUDIO_SMARTPA_STEREO
 endif
 
-# PA STANDBY
 ifeq ($(CONFIG_MACH_XIAOMI_DAGU), y)
 	CDEFINES += -DAUDIO_SMART_PA_STANDBY_SUPPORT
+endif
+
+ifneq (,$(filter $(TARGET_PRODUCT), dagu))
+	CDEFINES += -DCONFIG_MMHARDWARE_DETECTION
 endif
 
 CDEFINES +=	-DANI_LITTLE_BYTE_ENDIAN \
@@ -139,3 +134,6 @@ endif
 # Module information used by KBuild framework
 obj-$(CONFIG_SND_SOC_CS35L41) += cs35l41_dlkm.o
 cs35l41_dlkm-y := $(CS35L41_OBJS)
+
+# inject some build related information
+DEFINES += -DBUILD_TIMESTAMP=\"$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')\"
