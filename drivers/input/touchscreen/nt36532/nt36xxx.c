@@ -2509,6 +2509,10 @@ static int nvt_set_cur_value(int nvt_mode, int nvt_value)
 			}
 		}
 
+		// We cant have less then 0 pen
+		if(ts->pen_count<0)
+			ts->pen_count=0;
+
 		if(ts->pen_shield_flag){
 			/* sheild pen connection */
 			ts->pen_bluetooth_connect = 0;
