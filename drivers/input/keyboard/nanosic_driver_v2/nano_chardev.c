@@ -286,7 +286,7 @@ static unsigned int Nanosic_chardev_fops_poll(struct file *file,
  * @brief Handle userspace read() requests
  *
  * @details This function is called when a userspace process calls read()
- * on one of our device files.  We attempt to satisfy the read from the 
+ * on one of our device files.  We attempt to satisfy the read from the
  * buffers that are currently queued.
  *
  * @param file Structure describing file to use
@@ -427,7 +427,7 @@ static ssize_t Nanosic_chardev_fops_write(struct file *file,
 		if(Nanosonic_get_device_registered())
 			ret = Nanosic_input_release();
 	} else if (data[0] == 0x32 && data[1] == 0xFF && data[2] == 0x01) {
-		if(!Nanosonic_get_device_registered()){
+		if(!Nanosonic_get_device_registered() && gpio_get_value(gpio_hall_n_pin)){
 			Nanosic_set_caps_led(0);
 			ret = Nanosic_input_register();
 		}
@@ -441,7 +441,7 @@ static ssize_t Nanosic_chardev_fops_write(struct file *file,
 /** ***************************************************************************
  * @brief Handler for userspace file close
  *
- * @details This function is called when a userspace process has finished 
+ * @details This function is called when a userspace process has finished
  * reading from or writing do our device file, and closes the descriptor.
  *
  * @param inode The inode of the opened device file
