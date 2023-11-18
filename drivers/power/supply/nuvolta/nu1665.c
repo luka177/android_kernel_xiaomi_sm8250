@@ -735,7 +735,7 @@ static int nuvolta_1665_set_reverse_chg_mode(struct nuvolta_1665_chg *chip,
 		pm_relax(chip->dev);
 	}
 
-	schedule_delayed_work(&chip->pen_check_work, msecs_to_jiffies(3000));
+	schedule_delayed_work(&chip->pen_check_work, msecs_to_jiffies(0));
 
 out:
 	return 0;
