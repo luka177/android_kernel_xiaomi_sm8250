@@ -2231,8 +2231,13 @@ static void pen_check_worker(struct work_struct *work)
 
 	bool enable = (chip->reverse_pen_soc >= 0 && chip->reverse_pen_soc <= 100);
 
+	nuvolta_info("pen_check_worker\n");
+
 	if (chip->reverse_chg_en != enable) {
+		nuvolta_info("pen_check_worker notifier chain run\n");
 		pen_charge_state_notifier_call_chain(enable);
+
+		nuvolta_info("pen_check_worker run false\n");
 		nuvolta_1665_set_reverse_chg_mode(chip, enable);
 	}
 }
